@@ -1,4 +1,4 @@
-package com.dguzowski.supermarket.checkout.model;
+package com.dguzowski.supermarket.checkout.rest.model;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;

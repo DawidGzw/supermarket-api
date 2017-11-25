@@ -1,6 +1,5 @@
-package com.dguzowski.supermarket.checkout.model;
+package com.dguzowski.supermarket.checkout.rest.model;
 
-import com.dguzowski.supermarket.checkout.rest.CheckoutController;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
