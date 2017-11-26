@@ -13,11 +13,11 @@ public interface CheckoutService {
 
     PurchaseData newPurchease(ScanningInfo scanData);
 
-    TotalPrice addItemsToPurchase(UUID purchaseId, ScanningInfo scanData) throws PurchaseDataNotFoundException;
+    TotalPrice addItemsToPurchase(UUID purchaseId, ScanningInfo scanData);
 
-    void deletePurchase(UUID purchaseId) throws PurchaseDataNotFoundException;
+    void deletePurchase(UUID purchaseId);
 
-    Optional<TotalPrice> deletePurchaseItem(UUID purchaseId, Optional<ScanningInfo> scanData) throws PurchaseDataNotFoundException, ItemDataNotFoundInPurchaseException;
+    Optional<TotalPrice> deletePurchaseItem(UUID purchaseId, Optional<ScanningInfo> scanData);
 
     void savePurchase(UUID uniquePurchaseId);
 }

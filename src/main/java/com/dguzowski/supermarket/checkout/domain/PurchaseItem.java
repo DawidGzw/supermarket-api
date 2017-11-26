@@ -1,13 +1,16 @@
 package com.dguzowski.supermarket.checkout.domain;
 
+import com.dguzowski.supermarket.checkout.strategy.TotalPriceCalculationStrategy;
+import com.dguzowski.supermarket.checkout.strategy.TotalPriceCalculationStrategyProvider;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -24,9 +27,11 @@ public class PurchaseItem implements Serializable {
     @Embeddable
     public static class Id implements Serializable{
 
+        @NotNull
         @Column(name="PURCHASE_UUID")
         private UUID purchaseId;
 
+        @NotNull
         @Column(name="PRODUCT_ID")
         private Long productId;
 
@@ -43,9 +48,11 @@ public class PurchaseItem implements Serializable {
     private Id id;
 
     @Min(1)
+    @NotNull
     @Column(name = "amount", nullable = false, updatable = false)
     private Integer amount;
 
+    @NotNull
     @Column(name = "price", precision=10, scale=2, nullable = false, updatable = false)
     private BigDecimal totalPrice;
 
@@ -61,6 +68,18 @@ public class PurchaseItem implements Serializable {
     updatable = false)
     private Product product;
 
+    protected PurchaseItem() {
+    }
+
+    public PurchaseItem(Product product, Purchase purchase, int amount){
+        this.product = product;
+        this.purchase = purchase;
+        this.amount = amount;
+        this.id = new Id(purchase.getId(), product.getId());
+        this.calculateTotalPrice();
+        this.purchase.addItem(this);
+    }
+
     public Id getId() {
         return id;
     }
@@ -72,10 +91,14 @@ public class PurchaseItem implements Serializable {
     public void changeAmount(Integer amount) {
         this.amount += amount;
         BigDecimal oldPrice = this.totalPrice;
-        this.recalculateTotalPrice();
+        this.calculateTotalPrice();
         BigDecimal newPrice = this.totalPrice;
         BigDecimal change = newPrice.subtract(oldPrice);
         this.purchase.changeTotalPrice(change);
+        if(this.amount <=0){
+            this.amount = 0;
+            this.purchase.removeItem(this);
+        }
     }
 
     public Purchase getPurchase() {
@@ -86,8 +109,10 @@ public class PurchaseItem implements Serializable {
         return product;
     }
 
-    private void recalculateTotalPrice(){
-        //TO DO
+    protected void calculateTotalPrice(){
+        this.totalPrice = TotalPriceCalculationStrategyProvider
+                .getCalculationStrategy()
+                .calculateTotalPrice(this.product, this.amount);
     }
 
     public BigDecimal getTotalPrice() {

@@ -10,20 +10,16 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A Product.
  */
 @Entity
 @Table(name = "product")
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
-@NamedQueries({
-        @NamedQuery(
-                name = "findProductByBarcode",
-                query = "select i from Product where i.barcode = :barcode"
-        )
-})
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Product implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -33,7 +29,7 @@ public class Product implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Pattern(regexp = "^[0-9]{8}$")
+    @Pattern(regexp = "^[0-9]{8}$",message = "Bad barcode pattern {0}")
     @Column(name = "barcode", nullable = false)
     private String barcode;
 
@@ -110,6 +106,12 @@ public class Product implements Serializable {
         return promotions;
     }
 
+    public Set<Promotion> getApplicablePromotions(int amount){
+        return this.promotions.stream()
+                .filter( promo -> promo.getAmount()<=amount)
+                .collect(Collectors.toSet());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -123,7 +125,9 @@ public class Product implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
+        int result = Optional.ofNullable(id)
+                .map( id -> id.hashCode())
+                .orElse( 0 );
         result = 31 * result + barcode.hashCode();
         return result;
     }

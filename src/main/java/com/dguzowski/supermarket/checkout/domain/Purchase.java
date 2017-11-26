@@ -24,14 +24,14 @@ public class Purchase implements Serializable {
     private UUID id;
 
     @Column(name = "total_price", precision=10, scale=2, nullable=false, updatable=false)
-    private BigDecimal totalPrice;
+    private BigDecimal totalPrice = new BigDecimal("0.00");
 
     @Temporal(TemporalType.TIMESTAMP)
     @CreationTimestamp
     @Column(name = "purchase_date", updatable = false, nullable = false)
     private Date purchaseDate;
 
-    @OneToMany(mappedBy = "purchase", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "purchase", cascade = CascadeType.PERSIST)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<PurchaseItem> items = new HashSet<>();
 
@@ -68,7 +68,7 @@ public class Purchase implements Serializable {
     }
 
     public void changeTotalPrice(BigDecimal change) {
-        this.totalPrice.add(change);
+        this.totalPrice = this.totalPrice.add(change);
     }
 
     public Optional<PurchaseItem> getPurchaseItemByProduct(final Product product){
